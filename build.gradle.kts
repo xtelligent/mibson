@@ -4,8 +4,8 @@ plugins {
     application
 }
 
-group = "com.xtelligent"
-version = "1.1-SNAPSHOT"
+group = "io.xtelligent"
+version = System.getenv("RELEASE_VERSION")
 
 repositories {
     mavenCentral()
