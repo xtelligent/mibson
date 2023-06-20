@@ -21,6 +21,7 @@ class Mibson {
 
     fun parseMibFile(mibFile: File): MibFile {
         val obj = MibFile()
+        obj.fileName = mibFile.absoluteFile.name.toString()
         try {
             val loader = MibLoader()
             val loadedFile = loadMib(loader, mibFile)
@@ -67,7 +68,6 @@ class Mibson {
                         }
                     }
                 }
-                obj.fileName = loadedFile.name
                 loadedFile.headerComment?.let {
                     obj.headerComment = loadedFile.headerComment
                 }
