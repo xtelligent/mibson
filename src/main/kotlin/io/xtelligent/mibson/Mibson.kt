@@ -1,28 +1,32 @@
 package io.xtelligent.mibson
 
 import com.google.gson.GsonBuilder
+import io.xtelligent.mibson.log.LogEntry
 import io.xtelligent.mibson.mib.*
 import io.xtelligent.mibson.mib.MibSymbol
 import net.percederberg.mibble.*
 import net.percederberg.mibble.snmp.SnmpIndex
+import net.percederberg.mibble.snmp.SnmpModuleIdentity
 import net.percederberg.mibble.snmp.SnmpObjectType
 import net.percederberg.mibble.type.*
 import net.percederberg.mibble.value.ObjectIdentifierValue
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.PrintWriter
+import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.*
+import kotlin.collections.ArrayList
+import kotlin.io.path.absolute
 
-class Mibson<Index> {
+class Mibson {
 
-    fun parseMibFiles(mibFiles: LinkedList<File>) {
-        for (mibFile in mibFiles) {
-            parseMibFile(mibFile)
-        }
+    fun parseMibFiles(mibFiles: LinkedList<File>): List<MibFile> {
+        return mibFiles.map { file: File -> parseMibFile(file) }.toList()
     }
 
-    fun parseMibFile(mibFile: File) {
+    fun parseMibFile(mibFile: File) : MibFile {
+        val obj = MibFile()
         try {
             val loader = MibLoader()
             val loadedFile = loadMib(loader, mibFile)
@@ -69,8 +73,7 @@ class Mibson<Index> {
                         }
                     }
                 }
-
-                val obj = MibFile()
+                obj.fileName = loadedFile.name
                 loadedFile.headerComment?.let {
                     obj.headerComment = loadedFile.headerComment
                 }
@@ -85,29 +88,19 @@ class Mibson<Index> {
                 obj.mibTypeIntegerEnumeration = mibTypeIntegerEnumerationList
                 obj.mibTypeSequence = mibTypeSequenceList
                 obj.log = logEntriesToMibsonLog(loadedFile.log)
-                writeOutputFile(mibFile, obj)
+                return obj
             }
         } catch (e: MibLoaderException) {
-            val obj = MibFile()
             obj.log = logEntriesToMibsonLog(e.log)
-            writeOutputFile(mibFile, obj)
+            return obj
         } catch (e: Exception) {
-            println("failed")
-            println(e.message)
+            obj.log.errors.add(LogEntry("internal_error", e.message.toString(), mibFile.toString(), 0, e.stackTraceToString()))
+            return obj
         }
+        return MibFile()
     }
 
-    private fun writeOutputFile(mibFile: File, obj: MibFile) {
-        val gson = GsonBuilder().setPrettyPrinting().create()
-        val strRep = gson.toJson(obj)
-        println(strRep)
-        val rootPath = Paths.get(mibFile.parentFile.absolutePath)
-        val partialPath = Paths.get("output/" + mibFile.nameWithoutExtension + ".json")
-        val resolvedPath = rootPath.resolve(partialPath)
-        val writer = PrintWriter(resolvedPath.toString())
-        writer.write(strRep)
-        writer.close()
-    }
+
 
     private fun logEntriesToMibsonLog(log: MibLoaderLog): io.xtelligent.mibson.log.Log {
         val mibsonLog = io.xtelligent.mibson.log.Log()
@@ -280,6 +273,14 @@ class Mibson<Index> {
                                         return index
                                     }
 
+                                    is StringType -> {
+                                        val index: io.xtelligent.mibson.mib.Index = Index()
+                                        index.name = name
+                                        index.oid = oid
+                                        index.description = description
+                                        return index
+                                    }
+
                                     else -> {
                                         throw Exception()
                                     }
@@ -370,6 +371,15 @@ class Mibson<Index> {
                         newSymbol.oidNode = (symbol.value as ObjectIdentifierValue).value.toString()
 
                         newSymbol.symbolType = (symbol.type as ObjectIdentifierType).name
+                        return newSymbol
+                    }
+
+                    is SnmpModuleIdentity -> {
+                        val newSymbol =
+                            MibSymbol(symbol.name, symbol.value.toString(), (symbol.type as SnmpModuleIdentity).description)
+                        newSymbol.oidNode = (symbol.value as ObjectIdentifierValue).value.toString()
+
+                        newSymbol.symbolType = (symbol.type as SnmpModuleIdentity).name
                         return newSymbol
                     }
 

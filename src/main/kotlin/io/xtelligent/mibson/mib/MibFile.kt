@@ -5,6 +5,9 @@ import io.xtelligent.mibson.log.Log
 import java.util.*
 
 class MibFile {
+    @SerializedName("file_name")
+    var fileName: String = ""
+
     @SerializedName("header_comment")
     var headerComment: String = ""
 
