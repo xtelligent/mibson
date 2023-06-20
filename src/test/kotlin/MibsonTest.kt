@@ -1,11 +1,8 @@
 import io.xtelligent.mibson.Mibson
 import io.xtelligent.mibson.MibsonWriter
 import java.io.File
-import java.io.Writer
 import java.nio.file.Path
-import java.nio.file.Paths
 import kotlin.test.Test
-import kotlin.test.assertEquals
 
 class MibsonTest {
     @Test

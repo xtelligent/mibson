@@ -6,9 +6,7 @@ import java.io.File
 import java.io.PrintWriter
 import java.nio.file.Path
 import java.nio.file.Paths
-import kotlin.io.path.absolute
 import kotlin.io.path.createDirectories
-import kotlin.io.path.nameWithoutExtension
 
 class MibsonWriter(private val mibsonFile: MibFile, private val outputPath: Path) {
     public fun writeOutputFile() {

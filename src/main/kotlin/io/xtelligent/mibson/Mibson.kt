@@ -1,6 +1,5 @@
 package io.xtelligent.mibson
 
-import com.google.gson.GsonBuilder
 import io.xtelligent.mibson.log.LogEntry
 import io.xtelligent.mibson.mib.*
 import io.xtelligent.mibson.mib.MibSymbol
@@ -12,12 +11,7 @@ import net.percederberg.mibble.type.*
 import net.percederberg.mibble.value.ObjectIdentifierValue
 import java.io.File
 import java.io.FileNotFoundException
-import java.io.PrintWriter
-import java.nio.file.Path
-import java.nio.file.Paths
 import java.util.*
-import kotlin.collections.ArrayList
-import kotlin.io.path.absolute
 
 class Mibson {
 
@@ -25,7 +19,7 @@ class Mibson {
         return mibFiles.map { file: File -> parseMibFile(file) }.toList()
     }
 
-    fun parseMibFile(mibFile: File) : MibFile {
+    fun parseMibFile(mibFile: File): MibFile {
         val obj = MibFile()
         try {
             val loader = MibLoader()
@@ -94,12 +88,19 @@ class Mibson {
             obj.log = logEntriesToMibsonLog(e.log)
             return obj
         } catch (e: Exception) {
-            obj.log.errors.add(LogEntry("internal_error", e.message.toString(), mibFile.toString(), 0, e.stackTraceToString()))
+            obj.log.errors.add(
+                LogEntry(
+                    "internal_error",
+                    e.message.toString(),
+                    mibFile.toString(),
+                    0,
+                    e.stackTraceToString()
+                )
+            )
             return obj
         }
         return MibFile()
     }
-
 
 
     private fun logEntriesToMibsonLog(log: MibLoaderLog): io.xtelligent.mibson.log.Log {
@@ -376,7 +377,11 @@ class Mibson {
 
                     is SnmpModuleIdentity -> {
                         val newSymbol =
-                            MibSymbol(symbol.name, symbol.value.toString(), (symbol.type as SnmpModuleIdentity).description)
+                            MibSymbol(
+                                symbol.name,
+                                symbol.value.toString(),
+                                (symbol.type as SnmpModuleIdentity).description
+                            )
                         newSymbol.oidNode = (symbol.value as ObjectIdentifierValue).value.toString()
 
                         newSymbol.symbolType = (symbol.type as SnmpModuleIdentity).name
